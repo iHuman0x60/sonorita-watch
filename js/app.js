@@ -25,8 +25,7 @@ var app =
 (function() {
     var app = {},
         globalPage, // Sets current page information for page navigation.
-        musicPlayList = [], // Sets all music information.
-        currentPlayNumber, // Sets current play number. (0: first)
+        nowPlaying = null, // current track
         musicStatus = false, // true: now playing, false: pause or not playing.
         myaudio = document.querySelector('#myaudio'), // Gets audio element by myaudio id.
         interval, // for interval manage.
@@ -65,9 +64,9 @@ var app =
      * @private
      */
     function changeControlPage() {
-        changeHtmlString("div_title", musicPlayList[currentPlayNumber].titleName);
-        changeHtmlString("div_sub_title", musicPlayList[currentPlayNumber].artistName);
-        changeBackgroundImage("div_background", musicPlayList[currentPlayNumber].thumbnailFilePath);
+        changeHtmlString("div_title", nowPlaying.titleName);
+        changeHtmlString("div_sub_title", nowPlaying.artistName);
+        changeBackgroundImage("div_background", nowPlaying.thumbnailFilePath);
     }
 
     /**
@@ -113,11 +112,11 @@ var app =
     function startMusic(direction) {
 
         // It requires music play list exist with the gear status.
-        if (deviceStatus === "Device Gear" && musicPlayList.length !== 0) {
+        if (deviceStatus === "Device Gear" && !nowPlaying) {
             changePlayNumber(direction);
             changeControlPage();
 
-            myaudio.src = musicPlayList[currentPlayNumber].musicFilePath;
+            myaudio.src = nowPlaying.musicFilePath;
             clearInterval(interval);
             musicTime = 0;
 
@@ -129,7 +128,7 @@ var app =
                     musicTime++;
 
                     // when a music is played to the end, move to the next music.
-                    if (musicTime > (musicPlayList[currentPlayNumber].duration / 1000)) {
+                    if (musicTime > (nowPlaying.duration / 1000)) {
                         startMusic("next");
                     }
                 }, 1000);
@@ -151,7 +150,7 @@ var app =
             // When sample initiate, there is not audio source information in myaudio element.
             // then, add first music path. (currentPlayNumber is 0)
             if (myaudio.src === "") {
-                myaudio.src = musicPlayList[currentPlayNumber].musicFilePath;
+                myaudio.src = nowPlaying.musicFilePath;
                 musicStatus = true;
                 div_play.className = 'btn pause';
                 startMusic();
@@ -169,7 +168,7 @@ var app =
                         musicTime++;
 
                         // when a music is played to the end, move to the next music.
-                        if (musicTime > (musicPlayList[currentPlayNumber].duration / 1000)) {
+                        if (musicTime > (nowPlaying.duration / 1000)) {
                             startMusic("next");
                         }
                     }, 1000);
@@ -214,7 +213,7 @@ var app =
     function initControlPage() {
 
         // There is no music list.
-        if (musicPlayList.length === 0) {
+        if (!nowPlaying) {
             changeHtmlString("div_title", TITLE_NO_TRACK);
             changeBackgroundImage("div_background", BACKGROUND_IMAGE_NO_ALBUM);
         }
@@ -222,9 +221,9 @@ var app =
         // If there is a music list, it displays the information of the first music.
         else {
             currentPlayNumber = 0;
-            changeHtmlString("div_title", musicPlayList[currentPlayNumber].titleName);
-            changeHtmlString("div_sub_title", musicPlayList[currentPlayNumber].artistName);
-            changeBackgroundImage("div_background", musicPlayList[currentPlayNumber].thumbnailFilePath);
+            changeHtmlString("div_title", nowPlaying.titleName);
+            changeHtmlString("div_sub_title", nowPlaying.artistName);
+            changeBackgroundImage("div_background", nowPlaying.thumbnailFilePath);
         }
     }
 
@@ -311,23 +310,6 @@ var app =
     };
 
     /**
-     * Waits to refresh music information of getcontent using setInterval.
-     * getRefreshed function of getcontent returns current refresh status(true: refresh, false: not refresh).
-     * After refresh music information, set music play list information to musicPlayList variable.
-     * then, clear this interval and call initControlPage function.
-     * @private
-     */
-    function initGetMusic() {
-        var interval = setInterval(function() {
-            if (getcontent.getRefreshed()) {
-                musicPlayList = getcontent.getMusicPlayList();
-                clearInterval(interval);
-                initControlPage();
-            }
-        }, 10);
-    }
-
-    /**
      * Handles hardware back Event in every page.
      * This sample exits on the main page, and it returns to the main page if the back key is pressed in the pop-up.
      * @private
@@ -374,8 +356,7 @@ var app =
         globalPage = "main"; // Current page is "main" page.
         deviceStatus = "Device Gear"; // At first, device status is "gear" status.
         bindEvents();
-        getcontent.refreshMusics();
-        initGetMusic();
+        nowPlaying = radio.nextTrack();
     }
 
     window.onload = init();

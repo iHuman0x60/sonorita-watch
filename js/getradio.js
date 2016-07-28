@@ -1,46 +1,58 @@
 const radio = function() {
-	const domain = "https://sonorita.herokuapp.com/";
-	
-	return {
-		send_pulse: function(pulseDelta) {
-			$.ajax({
-				type: 'POST',
-				data: {
-					pulseDelta: pulseDelta
-				},
-				url: domain + "pulse",
-				dataType: 'json'
-			});
-			
-			console.log("pulse sent");
-		},
+	const domain = "https://" + credentials.clientID + ".web.cddbp.net/webapi/json/1.0/";
 		
-		send_action: function(action) {
+	var playlist = []
+	
+	function logError(err) {
+		console.log("=(")
+		console.log(JSON.stringify(err));
+	}
+	
+	function requestUpdate() {
+		$.ajax({
+			type: 'GET',
+			url: domain + "radio/lookahead",
+			data: {
+				client: credentials.clientIDfull,
+				user: credentials.userID,
+				radio_id: credentials.radioID
+			},
+			dataType: 'json',
+			success: receiveUpdate,
+			error: logError
+		});
+		
+		console.log("playlist requested");
+	}
+	
+	function receiveUpdate(response) {
+		console.log("Response received");
+		console.log(JSON.stringify(response));
+	}
+	
+	return {		
+		sendEvent: function(event_type, track_id) {
 			$.ajax({
-				type: 'POST',
+				type: 'GET',
 				data: {
-					action: action
+					client: credentials.clientID,
+					user: credentials.userID,
+					radio_id: credentials.radioID,
+					event: event_type + "_" + track_id
 				},
-				url: domain + "action",
-				dataType: 'json'
+				url: domain + "event",
+				dataType: 'json',
+				success: receiveUpdate,
+				error: logError
 			});
 			
 			console.log("action sent");
 		},
 		
-		get_playlist: function() {
-			$.ajax({
-				type: 'GET',
-				url: domain + "playlist",
-				dataType: 'json',
-				success: function(response) {
-					console.log("playlist received");
-					
-					//TODO
-				}
-			});
+		nextTrack: function() {
+			if (playlist.length == 0) requestUpdate();
 			
-			console.log("playlist requested");
+			return playlist.splice(0,1);
 		}
 	};
 }();
