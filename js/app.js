@@ -70,140 +70,6 @@ var app =
     }
 
     /**
-     * Changes currentPlayNumber variable as direction.
-     * @private
-     * @param {String} direction - Receiving input direction from the user.
-     */
-    function changePlayNumber(direction) {
-
-        // When the rotary event is clockwise or next button is clicked.
-        if (direction === "CW" || direction === "next") {
-
-            // CurrentPlayNumber plus 1, then, get the next music information in musicPlayList.
-            // If currentPlayNumber reaches musicPlayList's length, set the currentPlayNumber is 0.
-            if (currentPlayNumber === (musicPlayList.length - 1)) {
-                currentPlayNumber = 0;
-            } else {
-                currentPlayNumber++;
-            }
-        }
-
-        // When the rotary event is counterclockwise or previous button is clicked.
-        else if (direction === "CCW" || direction === "prev") {
-
-            // CurrentPlayNumber plus 1, then, get the previous music information in musicPlayList.
-            // If currentPlayNumber reaches 0, set the currentPlayNumber is last number.
-            if (currentPlayNumber === 0) {
-                currentPlayNumber = musicPlayList.length - 1;
-            } else {
-                currentPlayNumber--;
-            }
-        }
-    }
-
-    /**
-     * Plays the music from the beginning.
-     * Starts the music as parameter. ("next" or "previous" : next or previous music, nothing : current music)
-     * If music status is "play", it plays the music.
-     * If music status is "pause", it does nothing.
-     * @private
-     * @param {String} direction - Receiving input direction from the user.
-     */
-    function startMusic(direction) {
-
-        // It requires music play list exist with the gear status.
-        if (deviceStatus === "Device Gear" && !nowPlaying) {
-            changePlayNumber(direction);
-            changeControlPage();
-
-            myaudio.src = nowPlaying.musicFilePath;
-            clearInterval(interval);
-            musicTime = 0;
-
-            if (musicStatus === true) {
-                myaudio.play();
-
-                // check current music time using setInterval.
-                interval = setInterval(function() {
-                    musicTime++;
-
-                    // when a music is played to the end, move to the next music.
-                    if (musicTime > (nowPlaying.duration / 1000)) {
-                        startMusic("next");
-                    }
-                }, 1000);
-            }
-        }
-    }
-
-    /**
-     * Controls a music play and pause.
-     * It only work on gear status.
-     * @private
-     */
-    function controlMusic() {
-        var div_play = document.querySelector('#div_play');
-
-        // It requires music play list exist with the gear status.
-        if (deviceStatus === "Device Gear" && musicPlayList.length !== 0) {
-
-            // When sample initiate, there is not audio source information in myaudio element.
-            // then, add first music path. (currentPlayNumber is 0)
-            if (myaudio.src === "") {
-                myaudio.src = nowPlaying.musicFilePath;
-                musicStatus = true;
-                div_play.className = 'btn pause';
-                startMusic();
-            }
-
-            // In the others case, it controls play and pause.
-            else {
-
-                // If audio paused, it play audio. and change the pause button to the play button.
-                if (myaudio.paused) {
-                    myaudio.play();
-
-                    // check current music time using setInterval
-                    interval = setInterval(function() {
-                        musicTime++;
-
-                        // when a music is played to the end, move to the next music.
-                        if (musicTime > (nowPlaying.duration / 1000)) {
-                            startMusic("next");
-                        }
-                    }, 1000);
-                    div_play.className = 'btn pause';
-                    musicStatus = true;
-                }
-
-                // If audio played, it pause audio. and change the play button to the pause button.
-                else {
-                    myaudio.pause();
-                    clearInterval(interval);
-                    div_play.className = 'btn play';
-                    musicStatus = false;
-                }
-            }
-        }
-    }
-
-    /**
-     * Handles rotary event.
-     * the rotary direction does not matter in this sample.
-     * @private
-     * @param {Object} event
-     */
-    function rotaryEventHandler(event) {
-        var direction = event.detail.direction;
-
-        // Call changeControlPage function in the main page
-        if (globalPage === "main") {
-            //changeControlPage(direction);
-            startMusic(direction);
-        }
-    }
-
-    /**
      * Initializes the first control screen.
      * Device status is Gear at first.
      * It displays the information of the first music.(title, artist and background).
@@ -226,79 +92,6 @@ var app =
             changeBackgroundImage("div_background", nowPlaying.thumbnailFilePath);
         }
     }
-
-    /**
-     * Displays mobile status screen.
-     * This sample does not support full function for mobile starts, so it simply displays "BT disconnected"
-     * If any music is playing, it stops.
-     * @private
-     */
-    function changeDeviceMobile() {
-        changeHtmlString("div_title", TITLE_BT_DISCONNECTED);
-        changeHtmlString("div_sub_title", "");
-        changeBackgroundImage("div_background", BACKGROUND_IMAGE_NO_ALBUM);
-
-        // Music stops.
-        myaudio.pause();
-        clearInterval(interval);
-        document.querySelector("#div_play").className = 'btn play';
-        document.querySelector("#div_device").className = 'mobile';
-        musicStatus = false;
-    }
-
-    /**
-     * Display gear status screen. It calls the initControlPage function again.
-     * @private
-     */
-    function changeDeviceGear() {
-        initControlPage();
-        document.querySelector("#div_device").className = 'gear';
-        startMusic();
-
-    }
-
-    /**
-     * Changes device status to the other status. (gear -> mobile, mobile -> gear)
-     * @private
-     * @param {Object} target - current clicked selector object.
-     */
-    function changeDeviceStatus(target) {
-
-        // Current device status is gear. change device status to mobile.
-        if (deviceStatus === "Device Gear") {
-            // Using target object, change the data-title attribute to "Device Mobile",
-            // then, add class "device-mobile".
-            target.setAttribute("data-title", "Device Mobile");
-            target.className = "ui-item device-mobile";
-
-            deviceStatus = "Device Mobile";
-            changeDeviceMobile();
-        }
-
-        // Current device status is mobile. change device status to gear.
-        else if (deviceStatus === "Device Mobile") {
-
-            // Using target object, change the data-title attribute to "Device Gear",
-            // then, add class "device-gear".
-            target.setAttribute("data-title", "Device Gear");
-            target.className = "ui-item device-gear";
-
-            deviceStatus = "Device Gear";
-            changeDeviceGear();
-        }
-    }
-
-    /**
-     * Sets current device status to deviceStatus variable.
-     * then, call changeDeviceStatus function.
-     * @public
-     * @param {String} currentStatus - current device status.
-     * @param {Object} target - current clicked selector object.
-     */
-    app.setDeviceStatus = function setDeviceStatus(currentStatus, target) {
-        deviceStatus = currentStatus;
-        changeDeviceStatus(target);
-    };
 
     /**
      * Sets current page status to globalPage variable.
@@ -337,14 +130,41 @@ var app =
      */
     function bindEvents() {
         document.addEventListener('tizenhwkey', backEventHandler);
-        document.querySelector("#div_play").addEventListener('click', controlMusic);
+        document.querySelector("#div_play").addEventListener('click', function() {
+        	if (div_play.className === 'btn pause') {
+        		music_player.sendRequest("pause");
+        	}
+        	if (div_play.className === 'btn play') {
+        		music_player.sendRequest("play");
+        	}
+        });
         document.querySelector("#div_like").addEventListener('click', function() {
-            startMusic("prev");
+        	music_player.sendRequest("like");
         });
         document.querySelector("#div_next").addEventListener('click', function() {
-            startMusic("next");
+        	music_player.sendRequest("skip");
         });
-        document.addEventListener('rotarydetent', rotaryEventHandler);
+        document.addEventListener('rotarydetent', function(event) {
+        	const direction = event.detail.direction
+        	
+        	if (direction === "CW") {
+        		music_player.sendRequest("volume_up");
+        	}
+        	if (direction === "CCW") {
+        		music_player.sendRequest("volume_down");
+        	}
+        });
+        
+        radio.listen(function(playlist) {
+        	music_player.sendRequest("update_playlist", playlist);
+        });
+        
+        player.listen(function(event_type, nowPlaying) {
+        	nowPlaying = nowPlaying;
+        	radio.sendEvent(event_type, nowPlaying.id);
+        	
+        	// TODO: some events require body
+        });
     }
 
     /**
@@ -353,13 +173,12 @@ var app =
      * @private
      */
     function init() {
-        globalPage = "main"; // Current page is "main" page.
-        deviceStatus = "Device Gear"; // At first, device status is "gear" status.
         bindEvents();
-        nowPlaying = radio.nextTrack();
+        music_player.connect();
+        radio.refresh();
     }
 
-    window.onload = init();
+    window.onload = init;
 
     return app;
 }());

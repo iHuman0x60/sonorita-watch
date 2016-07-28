@@ -27,8 +27,38 @@ const radio = function() {
 	
 	function receiveUpdate(response) {
 		console.log("Response received");
+		
+		if (!response.STATUS) response = response.RESPONSE;
+		if (!response.STATUS) response = response[0]
+		
+		if (response.STATUS != "OK") {
+			logError(response.ERROR);
+			return;
+		}
+		
 		console.log(JSON.stringify(response));
+		
+		playlist = []
+		
+		response.ALBUM.forEach(function(album) {
+			console.log(JSON.stringify(album));
+			
+			album.TRACK.forEach(function(track) {
+				console.log(JSON.stringify(track));
+				
+				playlist.push({
+					artist: album.ARTIST[0].VALUE,
+					album: album.TITLE[0].VALUE,
+					track: track.TITLE[0].VALUE,
+					id: track.GN_ID
+				});
+			});
+		});
+		
+		listener(playlist);
 	}
+	
+	var listener;
 	
 	return {		
 		sendEvent: function(event_type, track_id) {
@@ -49,10 +79,12 @@ const radio = function() {
 			console.log("action sent");
 		},
 		
-		nextTrack: function() {
-			if (playlist.length == 0) requestUpdate();
-			
-			return playlist.splice(0,1);
+		listen: function(f) {
+			listener = f;
+		},
+		
+		refresh: function() {
+			requestUpdate();
 		}
 	};
 }();
