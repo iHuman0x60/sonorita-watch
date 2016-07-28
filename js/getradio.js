@@ -65,7 +65,7 @@ const radio = function() {
 			$.ajax({
 				type: 'GET',
 				data: {
-					client: credentials.clientID,
+					client: credentials.clientIDfull,
 					user: credentials.userID,
 					radio_id: credentials.radioID,
 					event: event_type + "_" + track_id
