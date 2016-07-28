@@ -159,11 +159,9 @@ var app =
         	music_player.sendRequest("update_playlist", playlist);
         });
         
-        player.listen(function(event_type, nowPlaying) {
+        music_player.listen(function(event_type, nowPlaying) {
         	nowPlaying = nowPlaying;
         	radio.sendEvent(event_type, nowPlaying.id);
-        	
-        	// TODO: some events require body
         });
     }
 
