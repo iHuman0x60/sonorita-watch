@@ -86,13 +86,13 @@ body {
     background-image: url('../image/Controller/music_controller_btn_pause.png');
 }
 
-#div_prev {
+#div_like {
     position: absolute;
     width: 66px;
     height: 66px;
     left: 40px;
     top: 147px;
-    background-image: url('../image/Controller/music_controller_btn_prev.png');
+    background-image: url('../image/Controller/like-button.png');
 }
 
 #div_next {

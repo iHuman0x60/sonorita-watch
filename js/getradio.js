@@ -49,7 +49,7 @@ const radio = function() {
 				playlist.push({
 					artist: album.ARTIST[0].VALUE,
 					album: album.TITLE[0].VALUE,
-					track: track.TITLE[0].VALUE,
+					title: track.TITLE[0].VALUE,
 					id: track.GN_ID
 				});
 			});
